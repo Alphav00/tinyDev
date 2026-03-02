@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0B0C10">
+<title>tinyDev Mobile — DJC³</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   SPRINT CONSTITUTION: PILLAR I — TACTILE NOSTALGIA
+   16-bit palette, pixel-perfect, SNES controller feel
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --bg:       #0B0C10;
+  --bg2:      #12141A;
+  --bg3:      #1C1F2E;
+  --floor1:   #1A2A0A;  /* green — DataIngest */
+  --floor2:   #1A1A2E;  /* blue  — Reasoning  */
+  --floor3:   #2A1A0A;  /* amber — ActionGen  */
+  --accent:   #FF6B00;
+  --gold:     #FFD700;
+  --neon:     #39FF14;
+  --cyan:     #00F5FF;
+  --pink:     #FF4FA3;
+  --error:    #FF2525;
+  --text:     #D0D0D0;
+  --text2:    #888;
+  --border:   #333;
+  --shadow:   #000;
+  --dimitri:  #5599FF;
+  --jessica:  #FF77BB;
+  --chi:      #FFD700;
+  --pixel:    'Press Start 2P', monospace;
+  --vt:       'VT323', monospace;
+  --press-depth: 3px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  height:100%; overflow:hidden;
+  background:#000;
+  font-family: var(--pixel);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+body {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  touch-action:none; user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── CONTAINER ── */
+#app {
+  position:relative;
+  width:100%; max-width:390px;
+  height:100%; max-height:844px;
+  background: var(--bg);
+  border-left: 2px solid var(--border);
+  border-right: 2px solid var(--border);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+
+/* ── SCANLINES overlay ── */
+#app::after {
+  content:'';
+  position:absolute; inset:0;
+  background: repeating-linear-gradient(0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px);
+  pointer-events:none;
+  z-index:999;
+}
+
+/* ── HEADER BAR ── */
+#header {
+  height:44px;
+  background: var(--bg2);
+  border-bottom: 2px solid var(--accent);
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 0 12px;
+  flex-shrink:0;
+}
+#header-title {
+  font-size:9px; color: var(--accent);
+  letter-spacing:2px;
+  text-shadow: 0 0 8px var(--accent);
+}
+#header-status {
+  font-size:7px; color: var(--neon);
+  animation: blink 1.4s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity:0; } }
+
+/* ── XP BAR ── */
+#xp-bar-wrap {
+  height:8px;
+  background: var(--bg3);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  position:relative;
+}
+#xp-bar-fill {
+  height:100%;
+  background: linear-gradient(90deg, var(--accent), var(--gold));
+  width:0%;
+  transition: width 0.6s steps(6);
+  image-rendering: pixelated;
+}
+#xp-label {
+  position:absolute; right:6px; top:-1px;
+  font-size:6px; color:var(--text2);
+}
+
+/* ── TOWER: three floors ── */
+#tower {
+  flex:1;
+  display:flex; flex-direction:column;
+  position:relative;
+  overflow:hidden;
+}
+
+.floor {
+  flex:1;
+  position:relative;
+  display:flex; flex-direction:column;
+  border-bottom:2px solid var(--border);
+  padding:8px 12px;
+  min-height:0;
+}
+.floor:last-child { border-bottom:none; }
+
+#floor-action { background: var(--floor3); }
+#floor-reason { background: var(--floor2); }
+#floor-ingest { background: var(--floor1); }
+
+.floor-label {
+  font-size:6px;
+  letter-spacing:2px;
+  opacity:0.6;
+  margin-bottom:4px;
+}
+#floor-action .floor-label { color: var(--accent); }
+#floor-reason .floor-label { color: var(--cyan); }
+#floor-ingest .floor-label { color: var(--neon); }
+
+/* ── AGENT SPRITES ── */
+.agent-row {
+  display:flex; align-items:flex-end; gap:8px;
+  flex:1; align-items:center;
+}
+.agent {
+  display:flex; flex-direction:column; align-items:center;
+  gap:4px; flex-shrink:0;
+  position:relative;
+}
+.agent-sprite {
+  width:32px; height:32px;
+  position:relative;
+  image-rendering: pixelated;
+}
+.agent-sprite canvas {
+  width:32px; height:32px;
+  image-rendering: pixelated;
+}
+.agent-name {
+  font-size:6px;
+  letter-spacing:1px;
+}
+.agent-state-badge {
+  font-size:5px;
+  padding:2px 4px;
+  border:1px solid currentColor;
+  border-radius:0;
+  opacity:0.8;
+}
+
+/* Agent colors */
+.agent-dimitri .agent-name { color: var(--dimitri); }
+.agent-dimitri .agent-state-badge { color: var(--dimitri); }
+.agent-jessica .agent-name { color: var(--jessica); }
+.agent-jessica .agent-state-badge { color: var(--jessica); }
+.agent-chi .agent-name { color: var(--chi); }
+.agent-chi .agent-state-badge { color: var(--chi); }
+
+/* ── STATE ANIMATIONS ── */
+
+/* IDLE: gentle bob */
+.agent.state-idle .agent-sprite {
+  animation: idle-bob 2s steps(4) infinite;
+}
+@keyframes idle-bob {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-2px); }
+}
+
+/* COMPUTING: fast type-shake */
+.agent.state-computing .agent-sprite {
+  animation: compute-shake 0.15s steps(2) infinite;
+}
+@keyframes compute-shake {
+  0%   { transform:translateX(0); }
+  50%  { transform:translateX(2px); }
+  100% { transform:translateX(-1px); }
+}
+
+/* COOLDOWN: slow droop */
+.agent.state-cooldown .agent-sprite {
+  animation: cooldown-droop 3s steps(6) infinite;
+  opacity:0.7;
+  transform-origin:bottom center;
+}
+@keyframes cooldown-droop {
+  0%,100% { transform:rotate(0deg); }
+  50%      { transform:rotate(-5deg); }
+}
+
+/* ── TOKEN BUBBLE STREAM (Pillar IV - Vertical Synthesis) ── */
+.bubble {
+  position:absolute;
+  width:8px; height:8px;
+  border-radius:0;
+  background: var(--cyan);
+  opacity:0;
+  pointer-events:none;
+  animation: bubble-rise var(--dur,1.4s) steps(12) forwards;
+}
+@keyframes bubble-rise {
+  0%   { opacity:0.9; transform:translateY(0) scale(1); }
+  60%  { opacity:0.6; transform:translateY(-80px) scale(0.8); }
+  100% { opacity:0;   transform:translateY(-160px) scale(0.3); }
+}
+.bubble.type-logic  { background: var(--dimitri); }
+.bubble.type-create { background: var(--jessica); }
+.bubble.type-synth  { background: var(--chi); }
+
+/* ── ELEVATOR (Pillar IV) ── */
+#elevator {
+  position:absolute;
+  right:14px;
+  width:16px; height:20px;
+  background: var(--bg2);
+  border:2px solid var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  font-size:8px;
+  transition: bottom 0.5s steps(8);
+  z-index:10;
+  pointer-events:none;
+}
+#elevator::before {
+  content:'';
+  position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+  width:2px; height:6px;
+  background: var(--accent);
+}
+
+/* ── OUTPUT PANEL ── */
+#output-panel {
+  height:140px;
+  background: var(--bg2);
+  border-top:2px solid var(--accent);
+  display:flex; flex-direction:column;
+  flex-shrink:0;
+}
+#output-header {
+  height:20px;
+  background:var(--bg3);
+  border-bottom:1px solid var(--border);
+  padding:0 10px;
+  display:flex; align-items:center; gap:8px;
+  font-size:7px; color:var(--text2);
+}
+#output-header .dot { width:6px; height:6px; border-radius:0; }
+.dot-r { background:var(--error); }
+.dot-y { background:var(--gold); }
+.dot-g { background:var(--neon); }
+#output-text {
+  flex:1;
+  padding:8px 10px;
+  font-family: var(--vt);
+  font-size:16px;
+  color: var(--text);
+  overflow-y:auto;
+  line-height:1.4;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+#output-text::-webkit-scrollbar { width:4px; }
+#output-text::-webkit-scrollbar-thumb { background:var(--border); }
+
+/* ── INPUT BAR ── */
+#input-bar {
+  height:52px;
+  background: var(--bg3);
+  border-top:2px solid var(--border);
+  display:flex; align-items:center;
+  gap:8px; padding:0 10px;
+  flex-shrink:0;
+}
+#prompt-input {
+  flex:1;
+  background:var(--bg);
+  border:2px solid var(--border);
+  color:var(--text);
+  font-family:var(--vt);
+  font-size:17px;
+  padding:6px 8px;
+  outline:none;
+  border-radius:0;
+}
+#prompt-input:focus {
+  border-color:var(--accent);
+  box-shadow: 0 0 0 2px rgba(255,107,0,0.2);
+}
+#prompt-input::placeholder { color:var(--text2); }
+
+/* ── PIXEL BUTTONS (Pillar I — Tactile Nostalgia) ── */
+.pxbtn {
+  font-family:var(--pixel);
+  font-size:8px;
+  border:none;
+  cursor:pointer;
+  position:relative;
+  padding:8px 12px;
+  border-radius:0;
+  transition: none;
+  letter-spacing:1px;
+  outline:none;
+  image-rendering:pixelated;
+  /* Hard pixel shadow = SNES button feel */
+  box-shadow:
+    0 var(--press-depth) 0 0 rgba(0,0,0,0.8),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.pxbtn:active, .pxbtn.pressed {
+  transform: translateY(var(--press-depth));
+  box-shadow:
+    0 0 0 0 rgba(0,0,0,0.8),
+    inset 0 1px 0 rgba(0,0,0,0.2);
+}
+
+.btn-run {
+  background: var(--accent);
+  color:#000;
+  --press-depth:3px;
+}
+.btn-run:hover { background:#FF8533; }
+
+.btn-council {
+  background: var(--dimitri);
+  color:#000;
+  font-size:6px;
+  padding:6px 8px;
+  --press-depth:2px;
+}
+.btn-council:hover { background:#77AAFF; }
+
+.btn-clear {
+  background:var(--bg);
+  border:2px solid var(--border);
+  color:var(--text2);
+  font-size:6px;
+  padding:6px 8px;
+  --press-depth:2px;
+}
+
+/* ── MODE ROW ── */
+#mode-row {
+  height:36px;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  display:flex; align-items:center; gap:6px;
+  padding:0 10px;
+  flex-shrink:0;
+}
+.mode-chip {
+  font-size:6px; padding:4px 8px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  color:var(--text2);
+  cursor:pointer;
+  transition:none;
+}
+.mode-chip.active {
+  border-color:var(--accent);
+  color:var(--accent);
+  background:rgba(255,107,0,0.1);
+}
+
+/* ── ZZZ OVERLAY for cooldown ── */
+.zzz {
+  position:absolute;
+  top:-14px; right:-4px;
+  font-size:7px;
+  color:var(--cyan);
+  animation: zzz-float 2s steps(8) infinite;
+  pointer-events:none;
+}
+@keyframes zzz-float {
+  0%   { opacity:1;   transform:translateY(0)   scale(1); }
+  100% { opacity:0;   transform:translateY(-12px) scale(0.6); }
+}
+
+/* ── COFFEE EMOJI for idle ── */
+.coffee-icon {
+  position:absolute;
+  bottom:-2px; right:-6px;
+  font-size:8px;
+  animation: coffee-steam 2s steps(4) infinite;
+}
+@keyframes coffee-steam {
+  0%,100% { opacity:1; transform:translateY(0); }
+  50%      { opacity:0.5; transform:translateY(-2px); }
+}
+
+/* ══════════════════════════════════════════════════════
+   PILLAR III — LEGIBLE CHAOS: Error/Chaos state
+   ══════════════════════════════════════════════════════ */
+#chaos-overlay {
+  position:absolute; inset:0;
+  background:rgba(255,37,37,0.15);
+  z-index:50;
+  pointer-events:none;
+  display:none;
+  animation: crt-flash 0.12s steps(1) infinite;
+}
+#chaos-overlay.active { display:block; }
+@keyframes crt-flash {
+  0%  { background:rgba(255,37,37,0.15); }
+  50% { background:rgba(255,37,37,0.04); }
+}
+
+#chaos-msg {
+  position:absolute;
+  inset:0;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  z-index:55;
+  pointer-events:all;
+}
+#chaos-msg.active { display:flex; }
+
+.chaos-title {
+  font-size:10px;
+  color:var(--error);
+  text-shadow: 2px 2px 0 #000, 0 0 20px var(--error);
+  animation: glitch-text 0.3s steps(3) infinite;
+}
+@keyframes glitch-text {
+  0%   { transform:translateX(0); }
+  33%  { transform:translateX(-2px); clip-path:inset(20% 0 30% 0); }
+  66%  { transform:translateX(2px);  clip-path:inset(60% 0 10% 0); }
+  100% { transform:translateX(0); clip-path:inset(0 0 0 0); }
+}
+.chaos-sub {
+  font-size:7px; color:var(--text); text-align:center;
+  font-family:var(--vt); font-size:16px;
+  max-width:200px; line-height:1.4;
+}
+#btn-extinguish {
+  font-size:9px; padding:14px 24px;
+  background:var(--error);
+  color:#fff;
+  --press-depth:4px;
+  box-shadow: 0 4px 0 0 #8B0000,
+              inset 0 1px 0 rgba(255,255,255,0.2);
+  animation: extinguish-pulse 0.8s steps(4) infinite;
+}
+#btn-extinguish:active {
+  transform:translateY(4px);
+  box-shadow:0 0 0 0 #8B0000, inset 0 1px 0 rgba(0,0,0,0.2);
+}
+@keyframes extinguish-pulse {
+  0%,100% { box-shadow:0 4px 0 0 #8B0000, 0 0 0 rgba(255,37,37,0); }
+  50%      { box-shadow:0 4px 0 0 #8B0000, 0 0 20px rgba(255,37,37,0.6); }
+}
+
+/* Fire sprites above agent desk on error */
+.fire-sprite {
+  position:absolute;
+  bottom:0; left:50%; transform:translateX(-50%);
+  font-size:20px;
+  animation: fire-anim 0.2s steps(3) infinite;
+  pointer-events:none;
+  z-index:9;
+}
+@keyframes fire-anim {
+  0%   { transform:translateX(-50%) scaleY(1); }
+  33%  { transform:translateX(-52%) scaleY(1.1); }
+  66%  { transform:translateX(-48%) scaleY(0.9); }
+  100% { transform:translateX(-50%) scaleY(1.05); }
+}
+
+/* ── COUNCIL MODE progress ── */
+#council-track {
+  position:absolute;
+  top:8px; left:50%; transform:translateX(-50%);
+  display:flex; gap:6px; align-items:center;
+  z-index:20;
+  pointer-events:none;
+}
+.council-node {
+  width:8px; height:8px;
+  border:2px solid var(--border);
+  background:var(--bg);
+}
+.council-node.done   { background:var(--neon); border-color:var(--neon); }
+.council-node.active { background:var(--accent); border-color:var(--accent);
+  animation:blink 0.6s steps(1) infinite; }
+
+/* ── ZAP streak effect on "run" ── */
+.zap-line {
+  position:absolute;
+  right:22px;
+  width:2px;
+  background: var(--cyan);
+  opacity:0;
+  pointer-events:none;
+  animation: zap 0.4s steps(6) forwards;
+}
+@keyframes zap {
+  0%   { opacity:1; }
+  100% { opacity:0; transform:scaleY(1.5); }
+}
+
+/* ── LOADING SCREEN ── */
+#boot-screen {
+  position:absolute; inset:0;
+  background:var(--bg);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  z-index:200;
+  gap:20px;
+}
+#boot-logo {
+  font-size:12px;
+  color:var(--accent);
+  text-shadow:0 0 20px var(--accent);
+  letter-spacing:3px;
+  animation: logo-flicker 2s steps(6) infinite;
+}
+@keyframes logo-flicker {
+  0%,95%,100% { opacity:1; }
+  96%          { opacity:0.3; }
+  97%          { opacity:1; }
+  98%          { opacity:0.2; }
+}
+#boot-sub { font-size:7px; color:var(--text2); letter-spacing:2px; }
+#boot-bar-wrap {
+  width:200px; height:10px;
+  border:2px solid var(--border);
+  background:var(--bg2);
+}
+#boot-bar { height:100%; width:0%; background:var(--neon);
+  transition:width 0.1s steps(1); }
+#boot-phase { font-size:6px; color:var(--text2); }
+
+/* ── PROVIDER MENU PANEL ── */
+#menu-backdrop {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.7);
+  z-index:79;
+  display:none;
+  cursor:pointer;
+}
+#menu-backdrop.open { display:block; }
+
+#menu-panel {
+  position:absolute;
+  top:0; left:0; bottom:0;
+  width:260px;
+  background:var(--bg2);
+  border-right:2px solid var(--accent);
+  z-index:80;
+  transform:translateX(-262px);
+  transition:transform 0.25s steps(8);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+#menu-panel.open { transform:translateX(0); }
+
+#menu-header {
+  height:44px;
+  background:var(--bg3);
+  border-bottom:2px solid var(--accent);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 12px;
+  font-size:8px;
+  color:var(--accent);
+  flex-shrink:0;
+}
+
+#menu-body {
+  flex:1; overflow-y:auto;
+  padding:12px 0;
+}
+#menu-body::-webkit-scrollbar { width:4px; }
+#menu-body::-webkit-scrollbar-thumb { background:var(--border); }
+
+.menu-section {
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+}
+.menu-section:last-child { border-bottom:none; }
+
+.menu-label {
+  font-size:6px;
+  color:var(--text2);
+  letter-spacing:2px;
+  margin-bottom:8px;
+}
+
+/* Provider chips */
+#provider-chips {
+  display:flex; flex-direction:column; gap:6px;
+}
+.provider-chip {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 10px;
+  background:var(--bg3);
+  border:2px solid var(--border);
+  cursor:pointer;
+  transition:none;
+}
+.provider-chip:active { transform:translateY(1px); }
+.provider-chip.active {
+  border-color:var(--accent);
+  background:rgba(255,107,0,0.08);
+}
+.pchip-icon { font-size:14px; }
+.pchip-name { font-size:8px; color:var(--text); flex:1; }
+.pchip-model { font-size:6px; color:var(--text2); }
+.provider-chip.active .pchip-name { color:var(--accent); }
+
+/* OR model chips */
+#or-model-chips {
+  display:flex; flex-direction:column; gap:4px;
+}
+.or-chip {
+  padding:6px 8px;
+  font-size:7px;
+  color:var(--text2);
+  border:1px solid var(--border);
+  background:var(--bg3);
+  cursor:pointer;
+}
+.or-chip.active { border-color:var(--cyan); color:var(--cyan); }
+
+/* Key input */
+.key-input-wrap {
+  display:flex; gap:4px; align-items:center;
+}
+#api-key-input {
+  flex:1;
+  background:var(--bg);
+  border:2px solid var(--border);
+  color:var(--text);
+  font-family:var(--vt);
+  font-size:16px;
+  padding:6px 8px;
+  outline:none;
+  border-radius:0;
+  min-width:0;
+}
+#api-key-input:focus { border-color:var(--accent); }
+
+#key-status {
+  font-size:6px;
+  margin-top:6px;
+  min-height:10px;
+}
+#key-status.ok  { color:var(--neon); }
+#key-status.err { color:var(--error); }
+
+/* Active config display */
+#active-config-display {
+  font-family:var(--vt);
+  font-size:15px;
+  color:var(--neon);
+  margin-top:2px;
+  line-height:1.5;
+}
+
+
+
+/* mobile safe areas */
+@supports (padding:env(safe-area-inset-bottom)) {
+  #input-bar { padding-bottom:calc(6px + env(safe-area-inset-bottom)); height:auto; min-height:52px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- BOOT SCREEN -->
+  <div id="boot-screen">
+    <div id="boot-logo">tinyDev</div>
+    <div id="boot-sub">DJC³ PIPELINE v1.0</div>
+    <div id="boot-bar-wrap"><div id="boot-bar"></div></div>
+    <div id="boot-phase">INITIALIZING AGENTS...</div>
+  </div>
+
+  <!-- HEADER -->
+  <div id="header">
+    <button class="pxbtn" id="btn-menu" title="Settings" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:10px;padding:6px 8px;--press-depth:2px;">☰</button>
+    <div id="header-title">tinyDev Mobile</div>
+    <div id="header-status">● OPENROUTER</div>
+  </div>
+
+  <!-- PROVIDER MENU PANEL -->
+  <div id="menu-panel">
+    <div id="menu-header">
+      <span>⚙ PROVIDER CONFIG</span>
+      <button id="btn-menu-close" class="pxbtn" style="background:transparent;border:none;color:var(--text2);font-size:10px;--press-depth:1px;">✕</button>
+    </div>
+    <div id="menu-body">
+
+      <!-- Provider select -->
+      <div class="menu-section">
+        <div class="menu-label">SELECT PROVIDER</div>
+        <div id="provider-chips">
+          <div class="provider-chip" data-provider="anthropic" id="pchip-anthropic">
+            <div class="pchip-icon">🔶</div>
+            <div class="pchip-name">ANTHROPIC</div>
+            <div class="pchip-model">claude-sonnet-4</div>
+          </div>
+          <div class="provider-chip active" data-provider="openrouter" id="pchip-openrouter">
+            <div class="pchip-icon">🔀</div>
+            <div class="pchip-name">OPENROUTER</div>
+            <div class="pchip-model">auto-route</div>
+          </div>
+          <div class="provider-chip" data-provider="gemini" id="pchip-gemini">
+            <div class="pchip-icon">💎</div>
+            <div class="pchip-name">GEMINI</div>
+            <div class="pchip-model">gemini-1.5-flash</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model selector (OpenRouter) -->
+      <div class="menu-section" id="model-section" style="display:none;">
+        <div class="menu-label">OPENROUTER MODEL</div>
+        <div id="or-model-chips">
+          <div class="or-chip active" data-model="openrouter/free">openrouter/free ⭐</div>
+          <div class="or-chip" data-model="anthropic/claude-3-haiku">claude-3-haiku</div>
+          <div class="or-chip" data-model="openai/gpt-4o-mini">gpt-4o-mini</div>
+          <div class="or-chip" data-model="google/gemma-3-27b-it:free">gemma-3 (free)</div>
+          <div class="or-chip" data-model="mistralai/mistral-7b-instruct:free">mistral-7b (free)</div>
+        </div>
+      </div>
+
+      <!-- API Key input -->
+      <div class="menu-section" id="key-section">
+        <div class="menu-label" id="key-label">ANTHROPIC API KEY</div>
+        <div class="key-input-wrap">
+          <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete
+                      <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+          <button id="btn-key-toggle" class="pxbtn" style="background:var(--bg);border:1px solid var(--border);color:var(--text2);font-size:8px;padding:4px 6px;--press-depth:1px;">👁</button>
+        </div>
+        <div id="key-status"></div>
+      </div>
+
+      <!-- Save -->
+      <div class="menu-section">
+        <button class="pxbtn btn-run" id="btn-save-provider" style="width:100%;font-size:8px;padding:10px;">💾 SAVE &amp; CONNECT</button>
+      </div>
+
+      <!-- Active config display -->
+      <div class="menu-section" id="active-config-row">
+        <div class="menu-label">ACTIVE</div>
+        <div id="active-config-display">—</div>
+      </div>
+
+    </div>
+  </div>
+  <div id="menu-backdrop"></div>
+
+  <!-- XP BAR -->
+  <div id="xp-bar-wrap">
+    <div id="xp-bar-fill"></div>
+    <div id="xp-label">XP: <span id="xp-val">0</span></div>
+  </div>
+
+  <!-- ELEVATOR (Pillar IV) -->
+  <div id="elevator">🛗</div>
+
+  <!-- TOWER: 3 floors — displayed top→bottom as Action/Reason/Ingest -->
+  <div id="tower">
+
+    <!-- Floor 3: ACTION GENERATION (top) -->
+    <div class="floor" id="floor-action">
+      <div class="floor-label">▲ [F3] ACTION GENERATION</div>
+      <div class="agent-row">
+        <div class="agent agent-chi state-idle" id="agent-chi">
+          <div class="agent-sprite">
+            <canvas id="canvas-chi" width="16" height="16"></canvas>
+            <div class="coffee-icon" id="coffee-chi">☕</div>
+          </div>
+          <div class="agent-name">CHI</div>
+          <div class="agent-state-badge" id="badge-chi">IDLE</div>
+        </div>
+        <div id="floor3-stream" style="flex:1;height:40px;position:relative;overflow:hidden;"></div>
+      </div>
+    </div>
+
+    <!-- Floor 2: REASONING (middle) -->
+    <div class="floor" id="floor-reason">
+      <div class="floor-label">■ [F2] REASONING</div>
+      <div class="agent-row">
+        <div class="agent agent-jessica state-idle" id="agent-jessica">
+          <div class="agent-sprite">
+            <canvas id="canvas-jessica" width="16" height="16"></canvas>
+            <div class="coffee-icon" id="coffee-jessica">☕</div>
+          </div>
+          <div class="agent-name">JESSICA</div>
+          <div class="agent-state-badge" id="badge-jessica">IDLE</div>
+        </div>
+        <div id="floor2-stream" style="flex:1;height:40px;position:relative;overflow:hidden;"></div>
+      </div>
+    </div>
+
+    <!-- Floor 1: DATA INGEST (bottom of tower) -->
+    <div class="floor" id="floor-ingest">
+      <div class="floor-label">▼ [F1] DATA INGEST</div>
+      <div class="agent-row">
+        <div class="agent agent-dimitri state-idle" id="agent-dimitri">
+          <div class="agent-sprite">
+            <canvas id="canvas-dimitri" width="16" height="16"></canvas>
+            <div class="coffee-icon" id="coffee-dimitri">☕</div>
+          </div>
+          <div class="agent-name">DIMITRI</div>
+          <div class="agent-state-badge" id="badge-dimitri">IDLE</div>
+        </div>
+        <div id="floor1-stream" style="flex:1;height:40px;position:relative;overflow:hidden;"></div>
+      </div>
+    </div>
+
+    <!-- Council progress track -->
+    <div id="council-track" style="display:none;">
+      <div class="council-node" id="cn1"></div>
+      <div style="font-size:6px;color:#555">→</div>
+      <div class="council-node" id="cn2"></div>
+      <div style="font-size:6px;color:#555">→</div>
+      <div class="council-node" id="cn3"></div>
+    </div>
+
+    <!-- Chaos overlay -->
+    <div id="chaos-overlay"></div>
+    <div id="chaos-msg">
+      <div class="chaos-title">!! HALLUCINATION !!</div>
+      <div class="chaos-sub" id="chaos-error-text">Agent returned corrupted output</div>
+      <button class="pxbtn" id="btn-extinguish">🔥 EXTINGUISH / RETRY</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div id="output-panel">
+    <div id="output-header">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <span>OUTPUT STREAM</span>
+      <span id="agent-label" style="margin-left:auto;color:var(--accent);">—</span>
+    </div>
+    <div id="output-text">// Awaiting input...</div>
+  </div>
+
+  <!-- MODE ROW -->
+  <div id="mode-row">
+    <div class="mode-chip active" data-agent="dimitri" id="chip-d">DIMITRI</div>
+    <div class="mode-chip" data-agent="jessica" id="chip-j">JESSICA</div>
+    <div class="mode-chip" data-agent="chi" id="chip-c">CHI</div>
+    <div class="mode-chip" data-agent="council" id="chip-council">⚡ COUNCIL</div>
+  </div>
+
+  <!-- INPUT BAR -->
+  <div id="input-bar">
+    <input id="prompt-input" type="text" placeholder="Enter prompt..." maxlength="400">
+    <button class="pxbtn btn-run" id="btn-run">▶ RUN</button>
+    <button class="pxbtn btn-clear" id="btn-clear">✕</button>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// tinyDev Mobile — DJC³ Pipeline v1.0
+// Sprint Constitution: All Four Pillars
+// ═══════════════════════════════════════════════════════════════════════════
+
+const VW = 390;
+
+// ─── AGENT DEFINITIONS ─────────────────────────────────────────────────────
+const AGENTS = {
+  dimitri: {
+    name:'DIMITRI', label:'D', color:'#5599FF',
+    personality:'You are Dimitri, a precise and methodical AI agent. You analyze data with cold logical clarity. You speak in structured, numbered observations. You are brief, factual, and never speculative. Temperature: low.',
+    temp:0.3, bubbleType:'type-logic', floor:'floor-ingest',
+    system:'Logical analysis mode. Provide structured, analytical response.'
+  },
+  jessica: {
+    name:'JESSICA', label:'J', color:'#FF77BB',
+    personality:'You are Jessica, a creative and energetic AI agent. You synthesize ideas with warmth and lateral thinking. You find unexpected connections. You speak in vivid, exploratory language. Temperature: high.',
+    temp:0.9, bubbleType:'type-create', floor:'floor-reason',
+    system:'Creative synthesis mode. Provide imaginative, lateral response.'
+  },
+  chi: {
+    name:'CHI', label:'C', color:'#FFD700',
+    personality:'You are Chi, the synthesis agent. You integrate analysis and creativity into decisive, actionable output. You distill complexity into essence. You are direct, grounded, and produce the final word.',
+    temp:0.6, bubbleType:'type-synth', floor:'floor-action',
+    system:'Synthesis mode. Integrate and produce final actionable output.'
+  }
+};
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+const state = {
+  mode: 'dimitri',
+  running: false,
+  xp: 0,
+  xpMax: 100,
+  agentStates: { dimitri:'idle', jessica:'idle', chi:'idle' },
+  councilStep: 0,
+  councilResults: [],
+  lastError: ''
+};
+
+// ─── DOM REFS ───────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const outputText   = $('output-text');
+const promptInput  = $('prompt-input');
+const btnRun       = $('btn-run');
+const btnClear     = $('btn-clear');
+const xpFill       = $('xp-bar-fill');
+const xpVal        = $('xp-val');
+const elevator     = $('elevator');
+const chaosOverlay = $('chaos-overlay');
+const chaosMsg     = $('chaos-msg');
+const chaosErrTxt  = $('chaos-error-text');
+const btnExtinguish= $('btn-extinguish');
+const agentLabel   = $('agent-label');
+const councilTrack = $('council-track');
+
+// ─── PIXEL SPRITE RENDERER (Pillar I - Tactile Nostalgia) ─────────────────
+function drawAgentSprite(canvasId, agentKey, stateKey) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,16,16);
+  
+  const colors = {
+    dimitri: ['#3366CC','#5599FF','#224488','#88BBFF','#FFFFFF'],
+    jessica: ['#CC3377','#FF77BB','#882255','#FFAACC','#FFFFFF'],
+    chi:     ['#CC9900','#FFD700','#886600','#FFEE88','#FFFFFF']
+  };
+  const c = colors[agentKey] || colors.dimitri;
+  
+  // 16x16 pixel character — body, head, details
+  const px = (x,y,col) => { ctx.fillStyle=col; ctx.fillRect(x,y,1,1); };
+  
+  // Body (4px wide)
+  const bodyX = 6;
+  for(let y=8;y<14;y++) for(let x=bodyX;x<bodyX+4;x++) px(x,y,c[0]);
+  
+  // Head
+  for(let y=3;y<8;y++) for(let x=5;x<11;x++) px(x,y,c[1]);
+  // Highlight on head
+  px(6,4,c[3]); px(7,4,c[3]);
+  
+  // Eyes
+  px(6,5,c[4]); px(9,5,c[4]);
+  
+  // State-specific details
+  if(stateKey === 'computing') {
+    // keyboard below
+    for(let x=5;x<11;x++) px(x,15,c[2]);
+    // glow eyes
+    px(6,5,'#FFFFFF'); px(9,5,'#FFFFFF');
+    // blink indicator
+    px(8,3,c[3]);
+  } else if(stateKey === 'cooldown') {
+    // zzz visual — closed eyes
+    px(6,5,c[0]); px(9,5,c[0]);
+    // head tilt
+    px(5,7,c[1]); px(11,7,c[1]);
+  } else {
+    // idle: small mouth smile
+    px(7,7,c[4]); px(8,7,c[4]);
+  }
+  
+  // Arms
+  px(4,9,c[2]); px(5,10,c[2]);
+  px(11,9,c[2]); px(10,10,c[2]);
+  
+  // Legs
+  px(6,14,c[2]); px(6,15,c[2]);
+  px(9,14,c[2]); px(9,15,c[2]);
+}
+
+// ─── SET AGENT STATE ────────────────────────────────────────────────────────
+function setAgentState(agentKey, newState) {
+  state.agentStates[agentKey] = newState;
+  const el    = document.getElementById('agent-' + agentKey);
+  const badge = document.getElementById('badge-' + agentKey);
+  const coffee = document.getElementById('coffee-' + agentKey);
+  
+  el.classList.remove('state-idle','state-computing','state-cooldown');
+  el.classList.add('state-' + newState);
+  badge.textContent = newState.toUpperCase();
+  
+  // Coffee icon: show when idle, hide when busy
+  if(coffee) coffee.style.display = newState === 'idle' ? 'block' : 'none';
+  
+  // ZZZ for cooldown
+  const existingZzz = el.querySelector('.zzz');
+  if(existingZzz) existingZzz.remove();
+  if(newState === 'cooldown') {
+    const zzz = document.createElement('div');
+    zzz.className = 'zzz';
+    zzz.textContent = 'Zzz';
+    el.querySelector('.agent-sprite').appendChild(zzz);
+  }
+  
+  // Redraw sprite
+  drawAgentSprite('canvas-' + agentKey, agentKey, newState);
+}
+
+// ─── MOVE ELEVATOR ──────────────────────────────────────────────────────────
+function moveElevator(floor) {
+  // floor: 1 (bottom) → 3 (top)
+  const tower = $('tower');
+  const floorEls = tower.querySelectorAll('.floor');
+  // floors are top→bottom in DOM: action(0), reason(1), ingest(2)
+  const floorMap = { 3: 0, 2: 1, 1: 2 };
+  const idx = floorMap[floor];
+  const floorEl = floorEls[idx];
+  const floorRect = floorEl.getBoundingClientRect();
+  const towerRect = tower.getBoundingClientRect();
+  const relTop = floorRect.top - towerRect.top;
+  const botFromTowerBottom = (towerRect.height - relTop - floorRect.height/2 - 10);
+  elevator.style.bottom = Math.max(0, botFromTowerBottom) + 'px';
+}
+
+// ─── SPAWN BUBBLE (Pillar IV — Vertical Synthesis) ─────────────────────────
+function spawnBubble(floorId, bubbleType) {
+  const container = $(floorId + '-stream');
+  if(!container) return;
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${bubbleType}`;
+  bubble.style.left = (Math.random() * 60 + 10) + '%';
+  bubble.style.bottom = '4px';
+  bubble.style.setProperty('--dur', (1.2 + Math.random()*0.6) + 's');
+  container.appendChild(bubble);
+  bubble.addEventListener('animationend', () => bubble.remove());
+}
+
+// ─── XP SYSTEM ──────────────────────────────────────────────────────────────
+function addXP(amount) {
+  state.xp = Math.min(state.xpMax, state.xp + amount);
+  const pct = (state.xp / state.xpMax) * 100;
+  xpFill.style.width = pct + '%';
+  xpVal.textContent = state.xp;
+}
+
+// ─── CHAOS STATE (Pillar III — Legible Chaos) ─────────────────────────────
+let fireIntervals = {};
+function enterChaos(agentKey, errorMsg) {
+  chaosOverlay.classList.add('active');
+  chaosMsg.classList.add('active');
+  chaosErrTxt.textContent = errorMsg || 'Agent hallucination detected';
+  
+  // Fire sprites on the agent
+  clearFire(agentKey);
+  const agentEl = $('agent-' + agentKey);
+  const fire = document.createElement('div');
+  fire.className = 'fire-sprite';
+  fire.id = 'fire-' + agentKey;
+  fire.textContent = '🔥';
+  agentEl.querySelector('.agent-sprite').appendChild(fire);
+}
+
+function clearFire(agentKey) {
+  const old = $('fire-' + agentKey);
+  if(old) old.remove();
+}
+
+function exitChaos() {
+  chaosOverlay.classList.remove('active');
+  chaosMsg.classList.remove('active');
+  ['dimitri','jessica','chi'].forEach(k => {
+    clearFire(k);
+    if(state.agentStates[k] !== 'computing') setAgentState(k,'idle');
+  });
+  state.running = false;
+  btnRun.disabled = false;
+  btnRun.textContent = '▶ RUN';
+}
+
+// ─── COUNCIL MODE nodes ─────────────────────────────────────────────────────
+function updateCouncilNodes(step) {
+  ['cn1','cn2','cn3'].forEach((id,i) => {
+    const n = $(id);
+    n.classList.remove('done','active');
+    if(i < step)      n.classList.add('done');
+    else if(i===step) n.classList.add('active');
+  });
+}
+
+// ─── PROVIDER CONFIG ─────────────────────────────────────────────────────────
+const providerConfig = {
+  active: 'openrouter',
+  keys: { anthropic:'', openrouter:'', gemini:'' },
+  orModel: 'openrouter/free'
+};
+
+// Persist / restore from localStorage
+(function loadConfig() {
+  try {
+    const saved = localStorage.getItem('djc3_provider');
+    if(saved) {
+      const p = JSON.parse(saved);
+      providerConfig.active  = p.active  || 'anthropic';
+      providerConfig.keys    = { ...providerConfig.keys, ...(p.keys || {}) };
+      providerConfig.orModel = p.orModel || providerConfig.orModel;
+    }
+  } catch(_) {}
+})();
+
+function saveConfig() {
+  try { localStorage.setItem('djc3_provider', JSON.stringify(providerConfig)); } catch(_) {}
+}
+
+// ─── PROVIDER API ROUTERS ────────────────────────────────────────────────────
+
+/** Anthropic streaming — existing SSE format */
+async function callAnthropic(systemPrompt, userPrompt, onChunk) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      ...(providerConfig.keys.anthropic ? {'x-api-key': providerConfig.keys.anthropic} : {})
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      stream: true,
+      system: systemPrompt,
+      messages: [{ role:'user', content: userPrompt }]
+    })
+  });
+  if(!resp.ok) { const e=await resp.json(); throw new Error(e.error?.message||`HTTP ${resp.status}`); }
+  const reader = resp.body.getReader();
+  const dec = new TextDecoder();
+  while(true) {
+    const {done,value} = await reader.read();
+    if(done) break;
+    const lines = dec.decode(value).split('\n');
+    for(const line of lines) {
+      if(!line.startsWith('data:')) continue;
+      const d = line.slice(5).trim();
+      if(d==='[DONE]') break;
+      try {
+        const evt = JSON.parse(d);
+        if(evt.type==='content_block_delta' && evt.delta?.type==='text_delta')
+          onChunk(evt.delta.text);
+      } catch(_){}
+    }
+  }
+}
+
+/** OpenRouter — OpenAI-compatible SSE */
+async function callOpenRouter(systemPrompt, userPrompt, onChunk) {
+  const key = providerConfig.keys.openrouter;
+  if(!key) throw new Error('No OpenRouter API key set. Open menu to configure.');
+  const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization': `Bearer ${key}`,
+      'HTTP-Referer': 'https://tinydev.local',
+      'X-Title': 'tinyDev DJC³'
+    },
+    body: JSON.stringify({
+      model: providerConfig.orModel,
+      max_tokens: 500,
+      stream: true,
+      messages: [
+        { role:'system', content: systemPrompt },
+        { role:'user',   content: userPrompt }
+      ]
+    })
+  });
+  if(!resp.ok) { const e=await resp.json(); throw new Error(e.error?.message||`HTTP ${resp.status}`); }
+  const reader = resp.body.getReader();
+  const dec = new TextDecoder();
+  while(true) {
+    const {done,value} = await reader.read();
+    if(done) break;
+    const lines = dec.decode(value).split('\n');
+    for(const line of lines) {
+      if(!line.startsWith('data:')) continue;
+      const d = line.slice(5).trim();
+      if(d==='[DONE]') break;
+      try {
+        const evt = JSON.parse(d);
+        const text = evt.choices?.[0]?.delta?.content;
+        if(text) onChunk(text);
+      } catch(_){}
+    }
+  }
+}
+
+/** Gemini — REST streaming (generateContent with stream) */
+async function callGemini(systemPrompt, userPrompt, onChunk) {
+  const key = providerConfig.keys.gemini;
+  if(!key) throw new Error('No Gemini API key set. Open menu to configure.');
+  const model = 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${key}`;
+  const resp = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      system_instruction: { parts:[{ text: systemPrompt }] },
+      contents: [{ role:'user', parts:[{ text: userPrompt }] }],
+      generationConfig: { maxOutputTokens: 500 }
+    })
+  });
+  if(!resp.ok) { const e=await resp.json(); throw new Error(e.error?.message||`HTTP ${resp.status}`); }
+  const reader = resp.body.getReader();
+  const dec = new TextDecoder();
+  while(true) {
+    const {done,value} = await reader.read();
+    if(done) break;
+    const lines = dec.decode(value).split('\n');
+    for(const line of lines) {
+      if(!line.startsWith('data:')) continue;
+      const d = line.slice(5).trim();
+      try {
+        const evt = JSON.parse(d);
+        const text = evt.candidates?.[0]?.content?.parts?.[0]?.text;
+        if(text) onChunk(text);
+      } catch(_){}
+    }
+  }
+}
+
+// ─── STREAM CALL (PROVIDER-AWARE) ────────────────────────────────────────────
+async function callAgent(agentKey, prompt, extraContext='') {
+  const agent = AGENTS[agentKey];
+  setAgentState(agentKey, 'computing');
+  
+  const floorNum = {dimitri:1, jessica:2, chi:3}[agentKey];
+  moveElevator(floorNum);
+  
+  const floorStreamId = {dimitri:'floor1',jessica:'floor2',chi:'floor3'}[agentKey];
+  let bubbleInterval = setInterval(() => spawnBubble(floorStreamId, agent.bubbleType), 180);
+
+  agentLabel.textContent = agent.name;
+  agentLabel.style.color = agent.color;
+  
+  const systemPrompt = `${agent.personality}\n\n${agent.system}\n\nBe concise (max 3 paragraphs).${extraContext ? '\n\nPrior context:\n' + extraContext : ''}`;
+  
+  let fullText = '';
+  outputText.textContent = '';
+  
+  const onChunk = (text) => {
+    fullText += text;
+    outputText.textContent = fullText;
+    outputText.scrollTop = outputText.scrollHeight;
+  };
+  
+  try {
+    const provider = providerConfig.active;
+    if     (provider === 'anthropic')   await callAnthropic(systemPrompt, prompt, onChunk);
+    else if(provider === 'openrouter')  await callOpenRouter(systemPrompt, prompt, onChunk);
+    else if(provider === 'gemini')      await callGemini(systemPrompt, prompt, onChunk);
+    
+    clearInterval(bubbleInterval);
+    addXP(15 + Math.floor(Math.random()*10));
+    outputText.style.color = agent.color;
+    setTimeout(() => { outputText.style.color = ''; }, 600);
+    setAgentState(agentKey, 'cooldown');
+    setTimeout(() => setAgentState(agentKey, 'idle'), 4000);
+    return fullText;
+    
+  } catch(err) {
+    clearInterval(bubbleInterval);
+    setAgentState(agentKey, 'idle');
+    enterChaos(agentKey, err.message || 'Unknown error');
+    throw err;
+  }
+}
+
+// ─── SINGLE AGENT RUN ────────────────────────────────────────────────────────
+async function runSingleAgent(prompt) {
+  const agentKey = state.mode;
+  btnRun.disabled = true;
+  btnRun.textContent = '...';
+  state.running = true;
+  
+  try {
+    await callAgent(agentKey, prompt);
+  } catch(_) {
+    // chaos already shown
+  }
+  
+  if(!chaosMsg.classList.contains('active')) {
+    state.running = false;
+    btnRun.disabled = false;
+    btnRun.textContent = '▶ RUN';
+  }
+}
+
+// ─── COUNCIL MODE (Sequential Triadic) ──────────────────────────────────────
+async function runCouncil(prompt) {
+    btnRun.textContent = '...';
+  state.running = true;
+  state.councilResults = [];
+  
+  councilTrack.style.display = 'flex';
+  updateCouncilNodes(0);
+  
+  const order = ['dimitri','jessica','chi'];
+  const labels = ['ANALYSIS','SYNTHESIS','ACTION'];
+  
+  try {
+    for(let i=0; i<3; i++) {
+      const agentKey = order[i];
+      updateCouncilNodes(i);
+      
+      const ctx = state.councilResults.join('\n---\n');
+      outputText.textContent = `[${labels[i]}]\n`;
+      
+      const result = await callAgent(agentKey, prompt, ctx);
+      state.councilResults.push(`[${AGENTS[agentKey].name}]: ${result}`);
+      
+      // Pause between agents
+      if(i < 2) await sleep(600);
+    }
+    
+    updateCouncilNodes(3);
+    addXP(50);
+    
+    // Harvest moment: all green
+    outputText.style.color = 'var(--neon)';
+    setTimeout(() => { outputText.style.color = ''; }, 1200);
+    
+  } catch(_) {
+    // chaos shown
+  }
+  
+  if(!chaosMsg.classList.contains('active')) {
+    state.running = false;
+    btnRun.disabled = false;
+    btnRun.textContent = '▶ RUN';
+    setTimeout(() => { councilTrack.style.display = 'none'; }, 2000);
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── MODE CHIPS ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.mode-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    if(state.running) return;
+    document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.mode = chip.dataset.agent;
+    
+    if(state.mode === 'council') {
+      agentLabel.textContent = '⚡ COUNCIL';
+      agentLabel.style.color = 'var(--gold)';
+    } else {
+      const a = AGENTS[state.mode];
+      agentLabel.textContent = a.name;
+      agentLabel.style.color = a.color;
+    }
+  });
+});
+
+// ─── RUN BUTTON (Pillar I - physical press) ──────────────────────────────────
+btnRun.addEventListener('click', () => {
+  if(state.running) return;
+  const prompt = promptInput.value.trim();
+  if(!prompt) {
+    promptInput.style.borderColor = 'var(--error)';
+    setTimeout(() => { promptInput.style.borderColor = ''; }, 800);
+    return;
+  }
+  
+  outputText.textContent = '';
+  if(state.mode === 'council') runCouncil(prompt);
+  else                         runSingleAgent(prompt);
+});
+
+// ─── CLEAR BUTTON ────────────────────────────────────────────────────────────
+btnClear.addEventListener('click', () => {
+  if(state.running) return;
+  promptInput.value = '';
+  outputText.textContent = '// Awaiting input...';
+  agentLabel.textContent = '—';
+});
+
+// ─── EXTINGUISH / RETRY ──────────────────────────────────────────────────────
+btnExtinguish.addEventListener('click', () => {
+  exitChaos();
+  outputText.textContent = '// Error cleared. Ready to retry.';
+});
+
+// ─── ENTER TO RUN ────────────────────────────────────────────────────────────
+promptInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !state.running) btnRun.click();
+});
+
+// ─── MENU UI LOGIC ───────────────────────────────────────────────────────────
+const menuPanel   = $('menu-panel');
+const menuBack    = $('menu-backdrop');
+const btnMenu     = $('btn-menu');
+const btnMenuClose= $('btn-menu-close');
+const apiKeyInput = $('api-key-input');
+const keyStatus   = $('key-status');
+const keyLabel    = $('key-label');
+const modelSection= $('model-section');
+const activeDisplay = $('active-config-display');
+
+const PROVIDER_META = {
+  anthropic:  { label:'ANTHROPIC API KEY', placeholder:'sk-ant-api03-...' },
+  openrouter: { label:'OPENROUTER API KEY', placeholder:'sk-or-v1-...' },
+  gemini:     { label:'GEMINI API KEY',      placeholder:'AIza...' }
+};
+
+function openMenu() {
+  menuPanel.classList.add('open');
+  menuBack.classList.add('open');
+  syncMenuUI();
+}
+function closeMenu() {
+  menuPanel.classList.remove('open');
+  menuBack.classList.remove('open');
+}
+
+function syncMenuUI() {
+  // Provider chips
+  document.querySelectorAll('.provider-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.provider === providerConfig.active);
+  });
+  // Key field
+  const meta = PROVIDER_META[providerConfig.active];
+  keyLabel.textContent = meta.label;
+  apiKeyInput.placeholder = meta.placeholder;
+  apiKeyInput.value = providerConfig.keys[providerConfig.active] || '';
+  apiKeyInput.type = 'password';
+  // Model section
+  modelSection.style.display = providerConfig.active === 'openrouter' ? 'block' : 'none';
+  document.querySelectorAll('.or-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.model === providerConfig.orModel);
+  });
+  keyStatus.textContent = '';
+  updateActiveDisplay();
+}
+
+function updateActiveDisplay() {
+  const p = providerConfig.active;
+  const hasKey = !!providerConfig.keys[p];
+  const modelStr = p === 'openrouter' ? `\n${providerConfig.orModel}` : '';
+  activeDisplay.textContent = `${p.toUpperCase()}${modelStr}\n${hasKey ? '🔑 KEY SET' : '⚠ NO KEY'}`;
+  activeDisplay.style.color = hasKey ? 'var(--neon)' : 'var(--gold)';
+}
+
+// Provider chip clicks
+document.querySelectorAll('.provider-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    providerConfig.active = chip.dataset.provider;
+    syncMenuUI();
+  });
+});
+
+// OR model chips
+document.querySelectorAll('.or-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.or-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    providerConfig.orModel = chip.dataset.model;
+  });
+});
+
+// Toggle key visibility
+$('btn-key-toggle').addEventListener('click', () => {
+  apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+});
+
+// Save button
+$('btn-save-provider').addEventListener('click', () => {
+  const key = apiKeyInput.value.trim();
+  providerConfig.keys[providerConfig.active] = key;
+  saveConfig();
+  
+  keyStatus.className = 'ok';
+  keyStatus.textContent = '✓ SAVED';
+  updateActiveDisplay();
+  
+  // Update header status
+  $('header-status').textContent = `● ${providerConfig.active.toUpperCase()}`;
+  $('header-status').style.color = 'var(--neon)';
+  
+  setTimeout(() => {
+    keyStatus.textContent = '';
+    closeMenu();
+  }, 900);
+});
+
+btnMenu.addEventListener('click', openMenu);
+btnMenuClose.addEventListener('click', closeMenu);
+menuBack.addEventListener('click', closeMenu);
+
+// Init display from saved config
+updateActiveDisplay();
+if(providerConfig.active !== 'anthropic') {
+  $('header-status').textContent = `● ${providerConfig.active.toUpperCase()}`;
+}
+
+
+async function boot() {
+  const bar = $('boot-bar');
+  const phase = $('boot-phase');
+  const phases = [
+    [0,  'INITIALIZING AGENTS...'],
+    [20, 'LOADING DIMITRI (LOGIC)...'],
+    [40, 'LOADING JESSICA (CREATIVE)...'],
+    [60, 'LOADING CHI (SYNTHESIS)...'],
+    [80, 'CALIBRATING ELEVATOR...'],
+    [95, 'WARMING COFFEE...'],
+    [100,'READY.']
+  ];
+  
+  for(const [pct, msg] of phases) {
+    bar.style.width = pct + '%';
+    phase.textContent = msg;
+    await sleep(220 + Math.random()*150);
+  }
+  
+  await sleep(300);
+  
+  const bootScreen = $('boot-screen');
+  bootScreen.style.transition = 'opacity 0.4s';
+  bootScreen.style.opacity = '0';
+  setTimeout(() => bootScreen.remove(), 400);
+  
+  // Initialize sprites
+  Object.keys(AGENTS).forEach(k => drawAgentSprite('canvas-' + k, k, 'idle'));
+  
+  // Initial elevator position
+  moveElevator(1);
+  
+  // Idle bubble demo
+  setTimeout(() => {
+    spawnBubble('floor1', 'type-logic');
+    spawnBubble('floor2', 'type-create');
+    spawnBubble('floor3', 'type-synth');
+  }, 800);
+}
+
+// ─── IDLE BUBBLE AMBIENCE ────────────────────────────────────────────────────
+setInterval(() => {
+  if(state.running) return;
+  const roll = Math.random();
+  if(roll < 0.33)      spawnBubble('floor1','type-logic');
+  else if(roll < 0.66) spawnBubble('floor2','type-create');
+  else                 spawnBubble('floor3','type-synth');
+}, 2200);
+
+// ─── AGENT ZZZ CYCLE (Cozy Productivity - Pillar II) ────────────────────────
+// Agents randomly nap if idle too long
+let idleTimers = {};
+function scheduleNap(agentKey) {
+  clearTimeout(idleTimers[agentKey]);
+  idleTimers[agentKey] = setTimeout(() => {
+    if(state.agentStates[agentKey] === 'idle' && !state.running) {
+      setAgentState(agentKey, 'cooldown');
+      // Wake back up after nap
+      setTimeout(() => {
+        if(state.agentStates[agentKey] === 'cooldown') {
+          setAgentState(agentKey, 'idle');
+          scheduleNap(agentKey);
+        }
+      }, 5000 + Math.random()*4000);
+    }
+  }, 12000 + Math.random()*8000);
+}
+['dimitri','jessica','chi'].forEach(k => scheduleNap(k));
+
+// ─── KICK OFF ────────────────────────────────────────────────────────────────
+boot();
+
+// Version stamp
+const ver = document.createElement('div');
+ver.id = 'version';
+ver.style.cssText = 'position:fixed;bottom:4px;right:6px;font-size:6px;color:#222;z-index:10;font-family:"Press Start 2P",monospace;';
+ver.textContent = 'DJC³ v1.0';
+document.body.appendChild(ver);
+</script>
+</body>
+</html>
